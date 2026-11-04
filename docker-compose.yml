@@ -28,6 +28,14 @@ services:
     ports:
       - "4567:4567"
 
+    # Healthcheck to verify core rendering tools are responsive
+    healthcheck:
+      test: ["CMD-SHELL", "node -v && /usr/bin/chromium --version && ffmpeg -version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
     volumes:
       # Mount your video project workspace and output renders
       - ./workspace:/workspace

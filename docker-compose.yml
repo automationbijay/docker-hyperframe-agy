@@ -1,0 +1,45 @@
+services:
+  hyperframes-agy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docker-hyperframe-agy
+    working_dir: /workspace
+    init: true
+    stdin_open: true
+    tty: true
+
+    # Essential for Chromium headless rendering in Docker / VPS
+    security_opt:
+      - seccomp:unconfined
+
+    # Critical for Chromium: default 64MB /dev/shm crashes headless frame capture
+    shm_size: "2gb"
+
+    # Optional: pass GEMINI_API_KEY from host .env for headless agy authentication
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - HYPERFRAMES_BROWSER_PATH=/usr/bin/chromium
+      - HYPERFRAMES_AGENT=1
+      - HYPERFRAMES_NO_TELEMETRY=1
+      - NODE_OPTIONS=--max-old-space-size=4096
+
+    # Expose HyperFrames Studio preview port (default range starts at 4567)
+    ports:
+      - "4567:4567"
+
+    volumes:
+      # Mount your video project workspace and output renders
+      - ./workspace:/workspace
+      # Persist Antigravity CLI auth, settings, and skills inside workspace
+      - ./workspace/.gemini:/root/.gemini
+      # Persist HyperFrames local ONNX catalog cache inside workspace
+      - ./workspace/.hyperframes:/root/.hyperframes
+      # External project mount (uncomment/adjust for local machine shortcuts)
+      - /mnt/windows-E/coding-agents/content-creation/hyperframe:/mnt/windows-E/coding-agents/content-creation/hyperframe
+
+    # Mount /tmp in RAM for fast frame capture buffers
+    tmpfs:
+      - /tmp:size=2G,mode=1777
+
+    restart: unless-stopped

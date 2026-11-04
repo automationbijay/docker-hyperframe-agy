@@ -1,0 +1,30 @@
+# Environment variables & secrets
+.env
+*.env
+
+# agy CLI auth tokens, sessions & settings
+workspace/.gemini/
+.gemini/
+
+# HyperFrames ONNX model cache
+workspace/.hyperframes/
+.hyperframes/
+
+# Machine-specific shortcuts & symlinks
+workspace/hyperframe
+
+# Video renders and raw frame dumps
+workspace/renders/
+workspace/temp/
+renders/
+temp/
+*.mp4
+*.mov
+*.tar.gz
+
+# Node dependencies & logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store

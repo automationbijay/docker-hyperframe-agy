@@ -102,6 +102,16 @@ The container runs an OpenSSH server as its main process, so n8n's **SSH** node 
 
 Test from the host: `ssh -p 2222 root@127.0.0.1`
 
+### Extra local mounts
+
+Coolify rejects `${VARS}` in volume paths, so `docker-compose.yml` only uses literal paths. To mount a host folder on your own machine:
+
+```bash
+cp docker-compose.override.example.yml docker-compose.override.yml   # edit the path
+```
+
+`docker compose` merges the override automatically. It's gitignored, and Coolify never reads it.
+
 ### Notes
 
 - SSH host keys are stored in `./ssh-host-keys/` (gitignored), so they don't change on rebuild.

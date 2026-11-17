@@ -63,9 +63,9 @@ services:
       - ./workspace/.gemini:/root/.gemini
       # Persist HyperFrames local ONNX catalog cache inside workspace
       - ./workspace/.hyperframes:/root/.hyperframes
-      # External project folder, mounted at the same path inside the container
-      # so the workspace/hyperframe symlink resolves. Set PROJECTS_PATH in .env.
-      - ${PROJECTS_PATH:-./projects}:${PROJECTS_MOUNT:-/projects}
+      # Extra project folder. Paths here must be literal (Coolify rejects env variables
+      # in volumes). For machine-specific mounts use docker-compose.override.yml.
+      - ./projects:/projects
       # Persistent SSH host keys (generated on first start)
       - ./ssh-host-keys:/etc/ssh/host-keys
 

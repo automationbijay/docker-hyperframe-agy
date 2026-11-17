@@ -1,0 +1,7 @@
+# Local-only extra mounts. Copy to docker-compose.override.yml (gitignored);
+# `docker compose` merges it automatically. Coolify ignores it.
+services:
+  hyperframes-agy:
+    volumes:
+      # Mount at the same path inside the container so symlinks in workspace/ resolve
+      - /path/to/your/projects:/path/to/your/projects

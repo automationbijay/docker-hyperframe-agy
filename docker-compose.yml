@@ -29,7 +29,8 @@ services:
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       # Root password for SSH - required, set it in .env
-      - ROOT_PASSWORD=${ROOT_PASSWORD:?Set ROOT_PASSWORD in .env}
+      # (entrypoint.sh refuses to start if this is empty)
+      - ROOT_PASSWORD=${ROOT_PASSWORD:-}
       - TZ=${TZ:-Asia/Kathmandu}
       - NODE_OPTIONS=--max-old-space-size=4096
 

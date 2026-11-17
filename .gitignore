@@ -10,6 +10,9 @@ workspace/.gemini/
 workspace/.hyperframes/
 .hyperframes/
 
+# SSH host private keys (generated at container start)
+ssh-host-keys/
+
 # Machine-specific shortcuts & symlinks
 workspace/hyperframe
 

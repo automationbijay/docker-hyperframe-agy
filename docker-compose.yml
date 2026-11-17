@@ -1,9 +1,17 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   hyperframes-agy:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: docker-hyperframe-agy
+    # Fixed hostname (what `hostname` prints inside the container)
+    hostname: hyperframes
     working_dir: /workspace
     init: true
     stdin_open: true
@@ -17,20 +25,32 @@ services:
     shm_size: "2gb"
 
     # Optional: pass GEMINI_API_KEY from host .env for headless agy authentication
+    # (HYPERFRAMES_* defaults are baked into the Dockerfile)
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - HYPERFRAMES_BROWSER_PATH=/usr/bin/chromium
-      - HYPERFRAMES_AGENT=1
-      - HYPERFRAMES_NO_TELEMETRY=1
+      # Root password for SSH - required, set it in .env
+      - ROOT_PASSWORD=${ROOT_PASSWORD:?Set ROOT_PASSWORD in .env}
+      - TZ=${TZ:-Asia/Kathmandu}
       - NODE_OPTIONS=--max-old-space-size=4096
 
     # Expose HyperFrames Studio preview port (default range starts at 4567)
     ports:
-      - "4567:4567"
+      - "${BIND_IP:-127.0.0.1}:${PORT:-4567}:4567"
+      # SSH from the host for testing (ssh -p 2222 root@127.0.0.1).
+      # n8n does NOT use this - it connects to hyperframes:22 over the shared network.
+      - "${BIND_IP:-127.0.0.1}:${SSH_PORT:-2222}:22"
+
+    # Stable DNS name for n8n: always reachable as "hyperframes" on the n8n network,
+    # no matter what name Coolify/compose gives the container.
+    networks:
+      default:
+      n8n:
+        aliases:
+          - hyperframes
 
     # Healthcheck to verify core rendering tools are responsive
     healthcheck:
-      test: ["CMD-SHELL", "node -v && /usr/bin/chromium --version && ffmpeg -version || exit 1"]
+      test: ["CMD-SHELL", "pgrep -x sshd >/dev/null && node -v && /usr/bin/chromium --version && ffmpeg -version || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,11 +63,26 @@ services:
       - ./workspace/.gemini:/root/.gemini
       # Persist HyperFrames local ONNX catalog cache inside workspace
       - ./workspace/.hyperframes:/root/.hyperframes
-      # External project mount (uncomment/adjust for local machine shortcuts)
-      - /mnt/windows-E/coding-agents/content-creation/hyperframe:/mnt/windows-E/coding-agents/content-creation/hyperframe
+      # External project folder, mounted at the same path inside the container
+      # so the workspace/hyperframe symlink resolves. Set PROJECTS_PATH in .env.
+      - ${PROJECTS_PATH:-./projects}:${PROJECTS_MOUNT:-/projects}
+      # Persistent SSH host keys (generated on first start)
+      - ./ssh-host-keys:/etc/ssh/host-keys
 
     # Mount /tmp in RAM for fast frame capture buffers
     tmpfs:
       - /tmp:size=2G,mode=1777
 
+    # Keep a heavy render from starving the host
+    mem_limit: ${MEM_LIMIT:-8g}
+    cpus: ${CPUS:-4}
+
+    logging: *default-logging
     restart: unless-stopped
+
+networks:
+  # The Docker network n8n is attached to. Find it with:
+  #   docker inspect <n8n-container> --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+  n8n:
+    name: ${N8N_NETWORK:-coolify}
+    external: true

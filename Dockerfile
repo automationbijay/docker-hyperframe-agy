@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     git \
     procps \
+    openssh-server \
     fonts-liberation \
     fonts-noto-core \
     fonts-noto-color-emoji \
@@ -42,6 +43,13 @@ ENV HYPERFRAMES_BROWSER_PATH=/usr/bin/chromium
 ENV HYPERFRAMES_AGENT=1
 ENV HYPERFRAMES_NO_TELEMETRY=1
 
+# 6. SSH server (for n8n's SSH node). Password + host keys are set at runtime
+#    by entrypoint.sh, so nothing secret is baked into the image.
+COPY sshd_config /etc/ssh/sshd_config.d/hyperframes.conf
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN rm -f /etc/ssh/ssh_host_*_key* && chmod +x /usr/local/bin/entrypoint.sh
+EXPOSE 22
+
 WORKDIR /workspace
 
-CMD ["sleep", "infinity"]
+CMD ["/usr/local/bin/entrypoint.sh"]

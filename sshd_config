@@ -1,0 +1,14 @@
+# Baked into the image as /etc/ssh/sshd_config.d/hyperframes.conf
+Port 22
+HostKey /etc/ssh/host-keys/ssh_host_ed25519_key
+HostKey /etc/ssh/host-keys/ssh_host_rsa_key
+PermitRootLogin yes
+PasswordAuthentication yes
+PubkeyAuthentication yes
+KbdInteractiveAuthentication no
+UsePAM yes
+MaxAuthTries 3
+LoginGraceTime 30
+X11Forwarding no
+ClientAliveInterval 60
+ClientAliveCountMax 3

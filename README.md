@@ -72,3 +72,38 @@ docker-hyperframe-agy/
     ├── .gemini/            # Isolated agy CLI credentials & skills
     └── .hyperframes/       # Isolated HyperFrames ONNX model cache
 ```
+
+---
+
+## SSH Access (n8n)
+
+The container runs an OpenSSH server as its main process, so n8n's **SSH** node can run `agy` / `hyperframes` commands in it.
+
+### Setup
+
+1. In `.env`, set `ROOT_PASSWORD` (`openssl rand -base64 24`). On Coolify, add it under **Environment Variables** instead.
+2. Set `N8N_NETWORK` to the Docker network n8n is on:
+   ```bash
+   docker inspect <n8n-container> --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+   ```
+   Under Coolify this is usually `coolify` (enable **Connect to Predefined Network** on both resources).
+3. Rebuild: `docker compose up -d --build`
+
+### n8n SSH credential
+
+| Field | Value |
+| :--- | :--- |
+| Host | `hyperframes` |
+| Port | `22` |
+| Username | `root` |
+| Password | `ROOT_PASSWORD` from `.env` |
+
+`hyperframes` is a network alias on the n8n network, so the name stays the same across reboots, rebuilds and Coolify redeploys. Don't use the container name or IP.
+
+Test from the host: `ssh -p 2222 root@127.0.0.1`
+
+### Notes
+
+- SSH host keys are stored in `./ssh-host-keys/` (gitignored), so they don't change on rebuild.
+- `PATH`, `GEMINI_API_KEY`, `NODE_OPTIONS` and `HYPERFRAMES_*` are copied into SSH sessions, so `agy` and `npx hyperframes` work in n8n commands.
+- SSH is not published to the LAN. Port `2222` binds to `BIND_IP` (`127.0.0.1` by default).
